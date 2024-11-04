@@ -19,7 +19,8 @@ TODO:【题图】
 <dependencies>
     <!-- SpringBoot 相关的依赖，这里省略 -->
 
-    <!-- Shiro -->
+    <!-- Shiro 相关的依赖 -->
+    <!-- 注意：由于 shiro-spring-boot-starter 与 SpringBoot 之间存在版本依赖，这里还是采用 Shiro 1.12 版本的配置方式-->
     <dependency>
         <groupId>org.apache.shiro</groupId>
         <artifactId>shiro-spring</artifactId>
@@ -62,22 +63,26 @@ TODO:【题图】
 </dependencies>
 ```
 
-这是常见的 Maven 配置文件，这里不作解释。**有一个点需要注意： Shiro 的版本与 SpringBoot 的版本之间存在兼容性问题，如果读者使用了最新的 SpringBoot 版本，需要自己修改配置方式并测试兼容性。**
+这是常见的 Maven 配置文件，不作解释。**有一个点需要注意： Shiro 的版本与 SpringBoot 的版本之间存在兼容性问题，如果读者使用了最新的 SpringBoot 版本，或者使用了 shiro-spring-boot-starter ，需要自己修改配置并测试兼容性。**
 
 ### 11.1.2 编写 ShiroConfig.java 文件
 
-在 SpringBoot 中，Shiro 的配置通常通过 Java 配置类来实现。首先，需要创建一个配置类 ShiroConfig.java ：
+在 SpringBoot 中，Shiro 的配置通常使用 Java 配置类来实现，示例代码如下：
 
 ```java
 @Configuration
 public class ShiroConfig {
     //...
+
+    //这里配置一堆 Shiro 相关的 Bean
 }
 ```
 
+这是常见的 Spring 配置类，不作解释。
+
 ### 11.1.3 实现自定义 Realm
 
-`Realm` 是 Shiro 的核心组件之一，用于从数据源中获取用户的认证和授权信息。实现自定义 `Realm` 类，可以根据应用的需求从数据库或其他数据源中获取用户信息，以下是自定义 `NiceFishMySQLRealm` 示例：
+如前所述，`Realm` 是 Shiro 的核心组件之一，用于从数据源中获取用户的认证和授权信息，以下是自定义 `NiceFishMySQLRealm` 示例：
 
 ```java
 package com.nicefish.rbac.shiro.realm;
@@ -136,7 +141,7 @@ public class NiceFishMySQLRealm extends AuthorizingRealm {
 }
 ```
 
-在 ShiroConfig.java 中配置自定义的 `NiceFishMySQLRealm` ：
+在 ShiroConfig.java 中配置 `NiceFishMySQLRealm` ，暴露给 Spring 容器：
 
 ```java
 @Bean
@@ -153,7 +158,7 @@ public NiceFishMySQLRealm nicefishRbacRealm() {
 
 ### 11.1.4 配置过滤器
 
-在 ShiroConfig.java 中配置过滤器：
+在 ShiroConfig.java 中配置过滤器示例代码如下：
 
 ```java
 @Bean
@@ -185,25 +190,153 @@ public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityMan
 
 ## 11.2 运行机制和源码分析
 
-- ShiroConfig.java 配置文件的解析与 Bean 的实例化
-- Shiro 在 SpringBoot 中的启动过程
-- 请求的处理过程
-- Session 的处理过程
-- 注解的解析过程
+TODO:补充一张 request 处理流程图
 
-### 11.2.1 ShiroConfig.java 配置文件的解析与 Bean 的实例化
+接下来，我们来解析运行机制和源代码，重点讨论以下 4 个最关键的主题：
 
-TODO:完成这段内容
+- ShiroConfig.java 配置文件与 Bean 的生命周期管理
+- SpringShiroFilter 在运行时过滤请求
+- 注解扫描与方法拦截
+- Session 的处理
 
-### 11.2.2 Shiro 在 SpringBoot 中的启动过程
+### 11.2.1 ShiroConfig.java 配置文件与 Bean 的生命周期管理
 
-TODO:完成这段内容
+在早期的版本中，开发者必须使用 XML 文件来配置 Shiro 。从 Spring 4.x 版本（2013 年左右）开始，使用 Java 代码编写配置文件逐渐成为主流，取代了大量的 XML 配置。这一趋势在 SpringBoot 推出之后（2014 年）得到了广泛普及。
 
-Shiro 自己实现的 AOP 机制是如何与 Spring 整合的？
+Shiro 从 1.3 版本（2016 年）开始正式支持使用 Java 文件进行配置，而不再依赖 XML 或 .ini 文件配置。随着 Shiro 1.4 版本的发布，Shiro 进一步加强了对 SpringBoot 的支持，提供了 shiro-spring-boot-starter ，并改进了 @Configuration 注解的支持，使得在 SpringBoot 环境中配置 Shiro 更加方便，示例代码如下：
 
-Shiro 的方法拦截器
+```java
+@Configuration
+public class ShiroConfig {
+  //...
 
-那么， `AopAllianceAnnotationsAuthorizingMethodInterceptor` 这个类具体又做了什么事情呢？我们来看它的关键源代码：
+  @Bean
+  //...
+
+  //...
+}
+```
+
+@Configuration 是 Spring 提供的注解，当 Spring 容器启动时，会扫描此注解，如果在其中发现了 @Bean 进行装饰的实例， Spring 就会自动管理这些实例的生命周期。
+
+对于 Shiro 来说，需要把以下组件暴露给 Spring 容器进行管理： Realm、SecurityManager、ShiroFilterFactoryBean、CookieRememberMeManager、SessionDAO、EventBus、EhCacheManager 。
+
+### 11.2.2 SpringShiroFilter 在运行时过滤请求
+
+按照职责划分， Shiro 在整个系统中只处理与权限相关的请求。所以 Shiro 定义了自己的 Filter 用来过滤请求，类名是 SpringShiroFilter 。同时，为了配置方便， Shiro 定义了一个工厂类叫做 ShiroFilterFactoryBean ，这个类会辅助创建 SpringShiroFilter 的实例，在上面增加一些自定义的配置，代码示例如下：
+
+```java
+@Bean
+public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager) {
+    ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
+    shiroFilterFactoryBean.setSecurityManager(securityManager);
+    shiroFilterFactoryBean.setLoginUrl(loginUrl);
+    shiroFilterFactoryBean.setUnauthorizedUrl(unauthorizedUrl);
+
+    Map<String, Filter> filters = new LinkedHashMap<String, Filter>();
+    filters.put("captchaValidateFilter", captchaValidateFilter());
+    shiroFilterFactoryBean.setFilters(filters);
+
+    //所有静态资源交给Nginx管理，这里只配置与 shiro 相关的过滤器。
+    LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
+    filterChainDefinitionMap.put("/nicefish/cms/post/write-post", "captchaValidateFilter");
+    filterChainDefinitionMap.put("/nicefish/cms/post/update-post", "captchaValidateFilter");
+    filterChainDefinitionMap.put("/nicefish/cms/comment/write-comment", "captchaValidateFilter");
+    filterChainDefinitionMap.put("/nicefish/auth/user/register", "anon,captchaValidateFilter");
+    filterChainDefinitionMap.put("/nicefish/auth/shiro/login", "anon,captchaValidateFilter");
+    filterChainDefinitionMap.put("/**", "anon");
+
+    shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
+    return shiroFilterFactoryBean;
+}
+```
+
+当 Spring 容器启动时，会解析这个 Bean ，获得过滤器的实例，并且加入到过滤器链（Filter Chain）中去。在运行时，当请求到来的时候，被匹配到的请求就会转发给 Shiro 处理。
+
+### 11.2.3 注解扫描与方法拦截
+
+当匹配到的请求转发给 Shiro 之后，方法调用链就进入了 Shiro 框架内部，接下来，我们来看 Shiro 是如何进行封装，并与 Spring 进行对接的。
+
+Shiro 自己实现了一套轻量级的 AOP 机制，这一套机制没有 Spring 那么复杂，也不是为了取代 Spring 。在 Shiro 的 AOP 机制中，主要有两个核心的处理流程：注解扫描、方法拦截。这样实现的目的是：
+
+- 方便与 `Spring` 集成：当 `Spring` 启动时， `AuthorizationAttributeSourceAdvisor` 这个类会扫描所有权限注解，对于扫描到的方法， `Spring` 会生成代理对象，并将 `Shiro` 的 `MethodInterceptor` 加入到拦截器链中。当带有权限注解的方法被调用时，代理对象会先调用 `MethodInterceptor` 。在 `MethodInterceptor` 内部会通过 `SecurityManager` 调用相应的权限检查逻辑，如果检查通过，则继续执行方法，否则抛出异常。
+- 可以脱离 Spring 框架独立运行，也可以与其它 AOP 框架集成。
+
+我们先来看 Shiro 是如何与 Spring 配合扫描权限注解的。
+
+在 shiro-spring-XXX-jakarta.jar 中，有一个关键的配置类 `ShiroAnnotationProcessorConfiguration` ，它是 Shiro 与 Spring 整合的关键桥梁。`ShiroAnnotationProcessorConfiguration` 的代码非常少，完整列举如下：
+
+```java
+package org.apache.shiro.spring.config;
+
+
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+
+/**
+ * @since 1.4.0
+ */
+@Configuration
+public class ShiroAnnotationProcessorConfiguration extends AbstractShiroAnnotationProcessorConfiguration{
+
+    @Bean
+    @DependsOn("lifecycleBeanPostProcessor")
+    protected DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+        return super.defaultAdvisorAutoProxyCreator();
+    }
+
+    @Bean
+    protected AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
+        return super.authorizationAttributeSourceAdvisor(securityManager);
+    }
+}
+```
+
+- @Configuration 表示这是一个配置类，Spring 容器启动时，会自动扫描并解析这个配置类中的内容，然后自动管理其中 @Bean 的生命周期。
+- 用 @Bean 注解定义了两个 Bean ，显然，这两个 Bean 已经交给 Spring 容器管理了。
+- 第一个 Bean 是 `DefaultAdvisorAutoProxyCreator` ，这是 Spring 框架中的一个类，它的作用是自动创建代理类。 @DependsOn("lifecycleBeanPostProcessor")：这个注解表示这个 Bean 的创建依赖于 lifecycleBeanPostProcessor，因为 lifecycleBeanPostProcessor 管理了 Shiro 中一些重要 Bean 的生命周期。
+- 第二个 Bean 是 `AuthorizationAttributeSourceAdvisor`，这是 Shiro 自己实现的一个 AOP 顾问类，这个类非常关键，它负责在运行时检查被调用的方法上是否带有权限注解。
+
+`AuthorizationAttributeSourceAdvisor` 的关键源代码如下：
+
+```java
+public class AuthorizationAttributeSourceAdvisor extends StaticMethodMatcherPointcutAdvisor {
+
+    private static final Class<? extends Annotation>[] AUTHZ_ANNOTATION_CLASSES =
+            new Class[] {
+                    RequiresPermissions.class, RequiresRoles.class,
+                    RequiresUser.class, RequiresGuest.class, RequiresAuthentication.class
+            };
+
+    //这里很关键，在构造函数中直接 new 了一个顾问，并调用 setAdvice 设置给 Spring。
+    public AuthorizationAttributeSourceAdvisor() {
+        setAdvice(new AopAllianceAnnotationsAuthorizingMethodInterceptor());
+    }
+
+    //...
+
+    //这里扫描指定的 Class 上是否存在权限注解。
+    private boolean isAuthzAnnotationPresent(Class<?> targetClazz) {
+        for( Class<? extends Annotation> annClass : AUTHZ_ANNOTATION_CLASSES ) {
+            Annotation a = AnnotationUtils.findAnnotation(targetClazz, annClass);
+            if ( a != null ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //...
+}
+```
+
+整体上说， Shiro 自己实现了一个方法切点顾问类（Method Pointcut Advisor），通过 @Configuration 和 @Bean 这两个注解，把它暴露给 Spring 去管理，而在顾问类的构造方法中，直接设置了一个方法拦截器，也就是名字很长的 `AopAllianceAnnotationsAuthorizingMethodInterceptor`。在运行时，这个方法拦截器将会拦截所有带有权限注解的方法，先进行权限校验。
+
+那么， `AopAllianceAnnotationsAuthorizingMethodInterceptor` 具体又做了什么呢？我们来看它的关键源代码（已省略无关代码）：
 
 ```java
 public class AopAllianceAnnotationsAuthorizingMethodInterceptor
@@ -218,7 +351,7 @@ public class AopAllianceAnnotationsAuthorizingMethodInterceptor
         AnnotationResolver resolver = new SpringAnnotationResolver();
         //we can re-use the same resolver instance - it does not retain state:
 
-        //注意这里的拦截器， Shiro 实现了5种注解拦截器。
+        //注意这里的拦截器， 把 Shiro 实现的5种注解拦截器全部加入到拦截器中去。
         interceptors.add(new RoleAnnotationMethodInterceptor(resolver));
         interceptors.add(new PermissionAnnotationMethodInterceptor(resolver));
         interceptors.add(new AuthenticatedAnnotationMethodInterceptor(resolver));
@@ -231,7 +364,7 @@ public class AopAllianceAnnotationsAuthorizingMethodInterceptor
 }
 ```
 
-这一组权限注解拦截器的继承结构如下：
+权限注解拦截器相关的继承结构如下：
 
 <img src="./imgs/MethodInterceptor.png">
 
@@ -270,101 +403,39 @@ public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 }
 ```
 
-**也就是说：只要我们在某个方法加上了权限注解， Spring 在启动的时候就会自动创建代理类，然后在运行时，当这个方法被调用的时候，Shiro 中的对应的权限拦截器就会首先被执行，这就是权限注解的整体运行机制。**
+**也就是说：只要我们在某个方法加上了权限注解， Spring 在启动的时候就会自动创建代理类。然后在运行时，当这个方法被调用的时候，Shiro 中的对应的权限拦截器就会首先被执行，这就是权限注解的运行机制。**
 
-那么，还有一个问题，我们自己定义的方法是什么时候被调用的呢？完整的调用轨迹是什么呢？我们在“Shiro 与 Spring 的整合”这一章中做详细的分析。
+### 11.2.4 Session 的处理
 
-### 11.2.3 请求的处理过程
-
-TODO: Shiro 是如何把自己的 Filter 整合到 Spring 的过滤器链中的？
-
-### 11.2.4 Session 的处理过程
-
-TODO:完成这段内容
-
-### 11.2.5 注解的解析过程
-
-权限注解是如何与 Spring 整合的？
-
-首先， Shiro 自己实现了一套轻量级的 AOP 机制，这一套机制没有 Spring 那么复杂，也不是为了取代 Spring 。在 Shiro 的 AOP 机制中，主要有两个核心的处理流程：注解扫描、方法拦截。这样实现的目的是：
-
-- 方便与 `Spring` 集成：当 `Spring` 启动时， `AuthorizationAttributeSourceAdvisor` 这个类会扫描所有权限注解，对于扫描到的方法， `Spring` 会生成代理对象，并将 `Shiro` 的 `MethodInterceptor` 加入到拦截器链中。当带有权限注解的方法被调用时，代理对象会先调用 `MethodInterceptor` 。在 `MethodInterceptor` 内部会通过 `SecurityManager` 调用相应的权限检查逻辑，如果检查通过，则继续执行方法，否则抛出异常。 Shiro 实现了一组类，构建了与 Spring 之间的桥梁，让 Shiro 可以把自己的处理逻辑嵌入到 Spring 的控制流中去。
-- 可以脱离 Spring 框架独立运行，也可以与其它 AOP 框架集成。
-
-我们先来看 Shiro 是如何与 Spring 配合扫描权限注解的。
-
-在 shiro-spring-XXX-jakarta.jar 中，有一个关键的配置类 `ShiroAnnotationProcessorConfiguration` ，它是 Shiro 与 Spring 整合的关键桥梁。`ShiroAnnotationProcessorConfiguration` 的代码非常少，完整列举如下：
+在 ShiroConfig 中，一般还会配置 SessionManager 的实例，并且通过 @Bean 注解暴露给 Spring ，让 Spring 容器去管理它的生命周期，示例代码如下：
 
 ```java
-package org.apache.shiro.spring.config;
+@Bean
+public DefaultWebSessionManager sessionManager() {
+    DefaultWebSessionManager defaultWebSessionMgr = new DefaultWebSessionManager();
 
+    //启用 EhCache 缓存，Shiro 默认不启用
+    //启用 EhCache 缓存之后，需要在持久化的 Session 和缓存中的 Session 之间进行数据同步。
+    //EhCache 实例配置位于 classpath:ehcache-shiro.xml 文件中，session 默认缓存在 "shiro-activeSessionCache" 实例中。
+    //认证、授权、Session，全部使用同一个 EhCache 运行时对象。
+    defaultWebSessionMgr.setCacheManager(ehCacheManager());
 
-import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
-import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
+    defaultWebSessionMgr.setDeleteInvalidSessions(true);
+    defaultWebSessionMgr.setGlobalSessionTimeout(timeout);
+    defaultWebSessionMgr.setSessionIdUrlRewritingEnabled(false);
 
-/**
- * @since 1.4.0
- */
-@Configuration
-public class ShiroAnnotationProcessorConfiguration extends AbstractShiroAnnotationProcessorConfiguration{
+    //启用定时调度器，用来清理 Session ，Shiro 默认采用内置的 ExecutorServiceSessionValidationScheduler 进行调度。
+    defaultWebSessionMgr.setSessionValidationSchedulerEnabled(true);
+    defaultWebSessionMgr.setSessionValidationInterval(validationInterval);
 
-    @Bean
-    @DependsOn("lifecycleBeanPostProcessor")
-    protected DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
-        return super.defaultAdvisorAutoProxyCreator();
-    }
-
-    @Bean
-    protected AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
-        return super.authorizationAttributeSourceAdvisor(securityManager);
-    }
+    defaultWebSessionMgr.setSessionDAO(sessionDAO());
+    defaultWebSessionMgr.setSessionFactory(sessionFactory());
+    return defaultWebSessionMgr;
 }
 ```
 
-- @Configuration 表示这是一个配置类，Spring 会将其作为配置类来加载，并为其中定义的 Bean 自动进行装配。它相当于传统的 XML 配置文件中的 <beans>。
-- 用 @Bean 注解定义了两个 Bean ，Spring 启动时候会自动扫描并装配这两个 Bean ，也就是说，这里定义的两个 Bean 已经交给 Spring 容器管理了。
-- 第一个 Bean 是 `DefaultAdvisorAutoProxyCreator` ，这是 Spring 框架中的一个类，它的作用是自动创建代理类。 @DependsOn("lifecycleBeanPostProcessor")：这个注解表示这个 Bean 的创建依赖于 lifecycleBeanPostProcessor，因为 lifecycleBeanPostProcessor 管理了 Shiro 中一些重要 Bean 的生命周期。
-- 第二个 Bean 是 `AuthorizationAttributeSourceAdvisor`，这是 Shiro 自己实现的一个 AOP 切点类，这个类非常关键，它负责在运行时检查被调用的方法上是否带有权限注解。
-
-`AuthorizationAttributeSourceAdvisor` 的关键源代码如下：
-
-```java
-public class AuthorizationAttributeSourceAdvisor extends StaticMethodMatcherPointcutAdvisor {
-
-    private static final Class<? extends Annotation>[] AUTHZ_ANNOTATION_CLASSES =
-            new Class[] {
-                    RequiresPermissions.class, RequiresRoles.class,
-                    RequiresUser.class, RequiresGuest.class, RequiresAuthentication.class
-            };
-
-    //这里很关键，在构造函数中直接 new 了一个切点，并调用 setAdvice 设置给了 Spring。
-    public AuthorizationAttributeSourceAdvisor() {
-        setAdvice(new AopAllianceAnnotationsAuthorizingMethodInterceptor());
-    }
-
-    //...
-
-    //这里扫描指定的 Class 上是否存在身份验证注解。
-    private boolean isAuthzAnnotationPresent(Class<?> targetClazz) {
-        for( Class<? extends Annotation> annClass : AUTHZ_ANNOTATION_CLASSES ) {
-            Annotation a = AnnotationUtils.findAnnotation(targetClazz, annClass);
-            if ( a != null ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    //...
-}
-```
-
-整体上说， Shiro 自己实现了一个方法切点类（Method Pointcut Advisor），通过 @Configuration 和 @Bean 这两个注解，把它暴露给 Spring 去管理，而在切点类的构造方法中，直接设置了一个方法拦截器，也就是名字很长的 `AopAllianceAnnotationsAuthorizingMethodInterceptor`。在运行时，这个方法拦截器将会拦截所有带有权限注解的方法，先进行权限校验。
+在之前的内容中，我们已经知道， SessionManager 的示例最终会被设置给 SecurityManager ，这个动作是由 Spring 的依赖注入机制自动完成的。关于 SessionManager 与 SecurityManager 之间的关系，请翻阅“第三章 身份验证与授权”，这里不再解释。
 
 ## 11.3 本章小结
 
-TODO:完成这段内容
+本章详细分析了 Shiro 与 SpringBoot 整合时的运行机制。
