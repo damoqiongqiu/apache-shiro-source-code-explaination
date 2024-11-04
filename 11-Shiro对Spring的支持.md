@@ -439,3 +439,9 @@ public DefaultWebSessionManager sessionManager() {
 ## 11.3 本章小结
 
 本章详细分析了 Shiro 与 SpringBoot 整合时的运行机制。
+
+## 版权声明
+
+本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。
+
+**版权归大漠穷秋所有 © 2024 ，侵权必究。**

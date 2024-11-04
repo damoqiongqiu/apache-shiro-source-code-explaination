@@ -176,3 +176,9 @@ public class AdminController {
 TODO:完成这段内容
 
 基于 Shiro 框架的 RBAC 权限控制系统为应用程序提供了灵活且强大的权限管理功能。通过配置自定义 `Realm`、设置 Shiro Filter 和使用权限验证注解，你可以轻松实现基于角色的访问控制。Shiro 的 RBAC 实现不仅简化了权限管理，还增强了系统的安全性。希望本文对你理解和实现 Shiro 的 RBAC 权限控制系统有所帮助。如果你有更多问题或需要进一步的帮助，请随时联系我！
+
+## 版权声明
+
+本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。
+
+**版权归大漠穷秋所有 © 2024 ，侵权必究。**

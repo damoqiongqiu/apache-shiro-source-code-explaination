@@ -111,3 +111,9 @@
 | **shiro-async-1.12.jar** | 允许在异步环境中使用 Shiro 的安全功能，尤其适用于现代的异步非阻塞 Web 框架。 |
 
 TODO:对 jar 包做一些补充说明。
+
+## 版权声明
+
+本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。
+
+**版权归大漠穷秋所有 © 2024 ，侵权必究。**
