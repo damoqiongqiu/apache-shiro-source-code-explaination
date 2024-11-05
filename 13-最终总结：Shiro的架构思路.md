@@ -31,58 +31,76 @@
 
 <img src="./imgs/shiro-lld.png">
 
-对于这张 LLD 架构图中出现的关键术语， Shiro 官方网站提供了简单的文档，为了方便开发者理解框架本身的设计意图，这里增加一些补充解释。在后续的内容中，我们会分章节详细这里的核心概念，并且分析它们的源码。
+对于这张 LLD 架构图中出现的关键术语， Shiro 官方网站提供了简单的文档，为了方便开发者理解框架本身的设计意图，这里增加一些补充解释。
 
 1. **Subject (org.apache.shiro.subject.Subject)**
-   - **文档**：Subject 是代表当前与应用程序交互的实体，通常是用户、第三方服务或任务等。每个 Subject 都是一个安全视角，负责与应用程序的安全相关的操作。通过 Subject，开发者可以执行认证、授权、会话管理等操作。
-   - **补充解释**：Subject 是与当前与软件交互的实体（用户、第三方服务、定时任务等）的一个安全特定的“视图”。它是 Shiro 框架的核心对象，几乎所有的操作都与它相关。
+
+   - **官方文档**：Subject 是代表当前与应用程序交互的实体，通常是用户、第三方服务或任务等。每个 Subject 都是一个安全视角，负责与应用程序的安全相关的操作。通过 Subject，开发者可以执行认证、授权、会话管理等操作。
+   - **补充解释**：Subject 是与当前与软件交互的实体（用户、第三方服务、定时任务等）的一个安全特定的“视图”。它是 Shiro 框架的核心对象，在代码层面，只要获得了 Subject 实例，就可以进行所有与权限相关的操作。
+
 2. **SecurityManager (org.apache.shiro.mgt.SecurityManager)**
-   - **文档**：SecurityManager 是 Shiro 的核心组件，负责管理所有安全相关的操作，包括认证、授权、会话管理等。它是一个“伞状”对象，负责协调其管理的组件，确保它们能够协同工作。
+
+   - **官方文档**：SecurityManager 是 Shiro 的核心组件，负责管理所有安全相关的操作，包括认证、授权、会话管理等。它是一个“伞状”对象，负责协调其管理的组件，确保它们能够协同工作。
    - **补充解释**：SecurityManager 基本上是 Shiro 中管理安全操作的全局对象，它掌握着应用程序中每个用户的视图，进而知道如何为每个用户执行安全操作。
+
 3. **Authenticator (org.apache.shiro.authc.Authenticator)**
-   - **文档**：Authenticator 是用于处理用户身份验证（登录）的组件。它会从指定的 Realm 中获取用户数据并进行身份验证，确保用户身份的正确性。
+
+   - **官方文档**：Authenticator 是用于处理用户身份验证（登录）的组件。它会从指定的 Realm 中获取用户数据并进行身份验证，确保用户身份的正确性。
    - **补充解释**：Authenticator 负责执行和响应用户认证尝试。当用户尝试登录时，Authenticator 执行相应的逻辑。它知道如何与多个 Realm 协作，验证用户的身份。
+
 4. **Authentication Strategy (org.apache.shiro.authc.pam.AuthenticationStrategy)**
-   - **文档**：当应用程序配置了多个 Realm 时，Authentication Strategy 定义了多个 Realm 的认证逻辑。如果一个 Realm 成功而其他失败，是否认证成功？是否需要所有 Realm 都成功？这些逻辑都由 Authentication Strategy 来决定。
+
+   - **官方文档**：当应用程序配置了多个 Realm 时，Authentication Strategy 定义了多个 Realm 的认证逻辑。如果一个 Realm 成功而其他失败，是否认证成功？是否需要所有 Realm 都成功？这些逻辑都由 Authentication Strategy 来决定。
    - **补充解释**：在涉及多个 Realm 的情况下，Authentication Strategy 是协调认证过程的核心。
+
 5. **Authorizer (org.apache.shiro.authz.Authorizer)**
-   - **文档**：Authorizer 负责处理授权操作，决定用户是否被允许访问某个资源或执行某个操作。它与 Realm 协作，从后端数据源中获取角色和权限信息，以做出决策。
+
+   - **官方文档**：Authorizer 负责处理授权操作，决定用户是否被允许访问某个资源或执行某个操作。它与 Realm 协作，从后端数据源中获取角色和权限信息，以做出决策。
    - **补充解释**：Authorizer 是决定用户能否执行特定操作的最终机制。它知道如何与多个后端数据源协调，获取用户角色和权限的相关信息。
+
 6. **SessionManager (org.apache.shiro.session.mgt.SessionManager)**
-   - **文档**：SessionManager 是 Shiro 的会话管理组件，负责创建和管理用户的会话生命周期。它可以在 Web 环境和非 Web 环境中使用，为用户提供一致的会话体验。
+
+   - **官方文档**：SessionManager 是 Shiro 的会话管理组件，负责创建和管理用户的会话生命周期。它可以在 Web 环境和非 Web 环境中使用，为用户提供一致的会话体验。
    - **补充解释**：SessionManager 能够管理用户的会话，即使没有 web 容器，也可以使用内置的会话管理功能来管理会话，并通过 SessionDAO 将会话数据持久化。
+
 7. **SessionDAO (org.apache.shiro.session.mgt.eis.SessionDAO)**
-   - **文档**：SessionDAO 是用于持久化会话的组件，执行对会话的 CRUD（创建、读取、更新、删除）操作。它允许会话信息存储在任何支持的持久化存储中，比如数据库。
+
+   - **官方文档**：SessionDAO 是用于持久化会话的组件，执行对会话的 CRUD（创建、读取、更新、删除）操作。它允许会话信息存储在任何支持的持久化存储中，比如数据库。
    - **补充解释**：SessionDAO 的存在使得任何数据源都可以作为 Shiro 的会话持久化基础设施的一部分。
+
 8. **CacheManager (org.apache.shiro.cache.CacheManager)**
-   - **文档**：CacheManager 是缓存管理器，负责管理和维护 Shiro 各个组件使用的缓存。这有助于减少对外部数据源的频繁访问，提升性能。可以与各种缓存产品集成。
+
+   - **官方文档**：CacheManager 是缓存管理器，负责管理和维护 Shiro 各个组件使用的缓存。这有助于减少对外部数据源的频繁访问，提升性能。可以与各种缓存产品集成。
    - **补充解释**：由于 Shiro 在认证、授权、会话管理过程中需要访问后端数据源，因此缓存是提升性能的重要机制。Shiro 支持各种开源和企业级缓存方案。
+
 9. **Cryptography (org.apache.shiro.crypto.cipher.\*)**
-   - **文档**：Shiro 提供了简化的密码学功能，支持加密、哈希和其他相关操作。开发者可以通过简单的 API 使用加密功能，而无需深入理解底层复杂的 Java 原生加密库。
+
+   - **官方文档**：Shiro 提供了简化的密码学功能，支持加密、哈希和其他相关操作。开发者可以通过简单的 API 使用加密功能，而无需深入理解底层复杂的 Java 原生加密库。
    - **补充解释**：Shiro 的加密包提供了简单且强大的加密工具，开发者可以轻松实现安全性功能，如数据加密和哈希生成。
+
 10. **Realm (org.apache.shiro.realm.Realm)**
 
-    - **文档**：Realm 是 Shiro 与应用程序安全数据的“桥梁”，用于在认证和授权时从外部数据源中获取用户信息。Shiro 可以配置多个 Realm，允许与不同的数据源交互。
+    - **官方文档**：Realm 是 Shiro 与应用程序安全数据的“桥梁”，用于在认证和授权时从外部数据源中获取用户信息。Shiro 可以配置多个 Realm，允许与不同的数据源交互。
     - **补充解释**：Realm 是一个非常重要的组件，用于连接 Shiro 和你的应用程序的数据源（例如数据库、LDAP）。每个 Realm 都可以代表一个数据源，用于认证和授权操作。
 
 11. **JDBC Realm**：
 
-- **文档**：JDBC Realm 是一种通过 JDBC 连接数据库来进行认证和授权的 Realm。它通常用于从关系型数据库中获取用户和权限数据。
-- **补充解释**：通过 JDBC Realm，Shiro 能够方便地与数据库集成，从中获取所需的用户账户信息。
+    - **官方文档**：JDBC Realm 是一种通过 JDBC 连接数据库来进行认证和授权的 Realm。它通常用于从关系型数据库中获取用户和权限数据。
+    - **补充解释**：通过 JDBC Realm，Shiro 能够方便地与数据库集成，从中获取所需的用户账户信息。
 
 12. **LDAP Realm**：
 
-- **文档**：LDAP Realm 是使用 LDAP 协议来连接 LDAP 服务器，获取用户身份和权限信息的 Realm。通常用于企业级应用中。
-- **补充解释**：LDAP Realm 适用于企业级应用和组织的目录服务，以便从 LDAP 中获取用户相关的认证和授权信息。
+    - **官方文档**：LDAP Realm 是使用 LDAP 协议来连接 LDAP 服务器，获取用户身份和权限信息的 Realm。通常用于企业级应用中。
+    - **补充解释**：LDAP Realm 适用于企业级应用和组织的目录服务，以便从 LDAP 中获取用户相关的认证和授权信息。
 
 13. **Custom Realm**：
 
-- **文档**：Custom Realm 是你可以根据自己的需求自定义的 Realm，它可以连接任何你选择的数据源，提供灵活的认证和授权机制。
-- **补充解释**：通过定制的 Realm，Shiro 可以连接到非标准的存储系统或服务，灵活应对各种特殊的业务需求。
+    - **官方文档**：Custom Realm 是你可以根据自己的需求自定义的 Realm，它可以连接任何你选择的数据源，提供灵活的认证和授权机制。
+    - **补充解释**：通过定制的 Realm，Shiro 可以连接到非标准的存储系统或服务，灵活应对各种特殊的业务需求。
 
 ## 发布包的结构
 
-整理后的表格如下：
+最后，对 Shiro 的发布包做一些说明：
 
 | **JAR 包名称** | **描述** |
 | --- | --- |
@@ -110,7 +128,14 @@
 | **shiro-event-1.12.jar** | 允许 Shiro 事件的管理，帮助开发者处理和订阅认证、授权和会话相关的事件。 |
 | **shiro-async-1.12.jar** | 允许在异步环境中使用 Shiro 的安全功能，尤其适用于现代的异步非阻塞 Web 框架。 |
 
-TODO:对 jar 包做一些补充说明。
+注意：除了 Shiro 官方发布的 jar 包之外，开源社区也贡献了很多工具包，由读者自己探索研究。
+
+## 资源链接
+
+- Apache Shiro 在 github 上的官方仓库： https://github.com/apache/shiro
+- Apache Shiro 官方网站：https://shiro.apache.org/
+- 本书实例项目：https://gitee.com/mumu-osc/nicefish-spring-boot
+- 本书文字稿：https://gitee.com/mumu-osc/apache-shiro-source-code-explaination
 
 ## 版权声明
 

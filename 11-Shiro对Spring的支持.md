@@ -440,6 +440,13 @@ public DefaultWebSessionManager sessionManager() {
 
 本章详细分析了 Shiro 与 SpringBoot 整合时的运行机制。
 
+## 资源链接
+
+- Apache Shiro 在 github 上的官方仓库： https://github.com/apache/shiro
+- Apache Shiro 官方网站：https://shiro.apache.org/
+- 本书实例项目：https://gitee.com/mumu-osc/nicefish-spring-boot
+- 本书文字稿：https://gitee.com/mumu-osc/apache-shiro-source-code-explaination
+
 ## 版权声明
 
 本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。

@@ -72,6 +72,14 @@ Shiro 的最大优势在于它的**简洁性**。与之前出现的安全框架�
 
 **从学习的角度来说，阅读 Apache Shiro 的源代码是一个不错的选择。它的概念清晰，设计简洁，能够帮助开发者更好地理解安全框架的基本原理和实现方式。**
 
+## 资源链接
+
+- Apache Shiro 在 github 上的官方仓库： https://github.com/apache/shiro
+- Apache Shiro 官方网站：https://shiro.apache.org/
+- 本书实例项目：https://gitee.com/mumu-osc/nicefish-spring-boot
+- 本书文字稿：https://gitee.com/mumu-osc/apache-shiro-source-code-explaination
+
+
 ## 版权声明
 
 本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。
