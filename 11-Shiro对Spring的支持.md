@@ -190,8 +190,6 @@ public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityMan
 
 ## 11.2 运行机制和源码分析
 
-TODO:补充一张 request 处理流程图
-
 接下来，我们来解析运行机制和源代码，重点讨论以下 4 个最关键的主题：
 
 - ShiroConfig.java 配置文件与 Bean 的生命周期管理
