@@ -79,7 +79,6 @@ Shiro 的最大优势在于它的**简洁性**。与之前出现的安全框架�
 - 本书实例项目：https://gitee.com/mumu-osc/nicefish-spring-boot
 - 本书文字稿：https://gitee.com/mumu-osc/apache-shiro-source-code-explaination
 
-
 ## 版权声明
 
 本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。

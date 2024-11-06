@@ -1,4 +1,4 @@
-TODO:【题图】
+<img src="./imgs/nice-fish.png">
 
 # 整合实战：基于 Shiro 框架的 RBAC 权限控制系统
 
