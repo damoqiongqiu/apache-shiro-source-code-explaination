@@ -1,6 +1,6 @@
 <img src="./imgs/shiro-spring.png">
 
-# Shiro 对 Spring 的支持
+# 11.Shiro 对 Spring 的支持
 
 `Shiro` 的第一个版本发布于 2004 年， `Spring` 项目起源于 2002 年，在 `Shiro` 最初的版本中没有与 `Spring` 相关的内容。后来，随着 `Spring` 的流行，从 2010 年开始， `Shiro` 开始提供对 `Spring` 的支持，推出了一个独立的 jar 包，名为 `shiro-spring`。从 2018 年开始， `Shiro` 在 v1.4 中开始增强对 `SpringBoot` 的支持。
 
