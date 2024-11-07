@@ -1,5 +1,3 @@
-<img src="./imgs/apache-shiro.png">
-
 # Shiro 的发展历程
 
 ## 1.1 背景
