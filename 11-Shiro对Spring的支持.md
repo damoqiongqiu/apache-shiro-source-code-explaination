@@ -432,7 +432,7 @@ public DefaultWebSessionManager sessionManager() {
 }
 ```
 
-在之前的内容中，我们已经知道， SessionManager 的示例最终会被设置给 SecurityManager ，这个动作是由 Spring 的依赖注入机制自动完成的。关于 SessionManager 与 SecurityManager 之间的关系，请翻阅“第三章 身份验证与授权”，这里不再解释。
+在之前的内容中，我们已经知道， SessionManager 的实例最终会被设置给 SecurityManager ，这个动作是由 Spring 的依赖注入机制自动完成的。关于 SessionManager 与 SecurityManager 之间的关系，请翻阅“第三章 身份验证与授权”，这里不再解释。
 
 ## 11.3 本章小结
 
