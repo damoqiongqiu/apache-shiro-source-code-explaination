@@ -74,10 +74,10 @@ Shiro 的最大优势在于它的**简洁性**。与之前出现的安全框架�
 
 ## 资源链接
 
-- Apache Shiro 在 github 上的官方仓库： https://github.com/apache/shiro
-- Apache Shiro 官方网站：https://shiro.apache.org/
-- 本书实例项目：https://gitee.com/mumu-osc/nicefish-spring-boot
-- 本书文字稿：https://gitee.com/mumu-osc/apache-shiro-source-code-explaination
+- [Apache Shiro 在 github 上的官方仓库：](https://github.com/apache/shiro)
+- [Apache Shiro 官方网站：](https://shiro.apache.org/)
+- [本书实例项目：](https://gitee.com/mumu-osc/nicefish-spring-boot)
+- [本书文字稿：](https://gitee.com/mumu-osc/apache-shiro-source-code-explaination)
 
 ## 版权声明
 
