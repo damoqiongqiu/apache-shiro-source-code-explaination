@@ -17,6 +17,4 @@ Apache Shiro 是一个轻量级的 Java 安全框架，也是 Apache 基金会�
 
 本书基于 [**CC BY-NC-ND 4.0 许可协议**](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en)发布，自由转载-非商用-非衍生-保持署名。
 
-**版权归大漠穷秋所有 © 2024 ，侵权必究。**
-
-**（这本书的作者正在寻找一份新的工作，如果有好的机会，请联系我的 VX： lanxinshuma）**
+\*\*版权归大漠穷秋所有 © 2024 ，侵权必究。
